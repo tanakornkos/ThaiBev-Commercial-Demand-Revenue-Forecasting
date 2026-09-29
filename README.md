@@ -1,82 +1,42 @@
-# ThaiBev Stock Forecasting: Market Momentum, Technical Indicators & Macroeconomic Drivers
+# ThaiBev Commercial Demand & Revenue Forecasting
 
-Econometric and quantitative forecasting study for Thai Beverage Public Company Limited (`Y92.SI`), listed on the Singapore Exchange (SGX), evaluating price persistence, technical indicators, Thailand nationwide beer-sales data, and macroeconomic variables.
+**Pricing analytics case study for CPG beverage demand, revenue sensitivity, and leak-free forecasting.**
 
-## Project Overview
-
-This repository investigates whether ThaiBev stock returns and price trajectories can be forecast using:
-
-- **Historical Price Behavior & Momentum**: Daily and monthly lagged returns.
-- **Leak-Free Technical Indicators**: Monthly RSI and MACD features strictly lagged relative to forward targets.
-- **Thailand Nationwide Beer-Sales Data**: Macroeconomic industry data adjusted for official 1-to-2 month publication delays.
-- **Macroeconomic Drivers**: Singapore market benchmark (Straits Times Index `^STI`), Thai equity market proxy (iShares MSCI Thailand ETF `THD`), foreign exchange rates (`SGDTHB=X`), and COVID-19 lockdown regime indicators.
-- **Small-Sample Models & Baselines**: Random walk baselines, regularized linear models (Ridge, ElasticNetCV), and SARIMAX with exogenous variables.
+This project reframes Thai Beverage Public Company Limited (`Y92.SI`) from a pure stock-price forecasting exercise into a **commercial analytics project** relevant to Pricing Analyst, Revenue Analyst, Commercial Analyst, and FP&A roles. It combines public Thai beer-sales data, ThaiBev market data, macroeconomic indicators, and pricing-scenario modeling to evaluate how demand and market signals can support revenue planning.
 
 ---
 
-## Critical Methodological Improvements & Bug Fixes
+## Business Question
 
-1. **Elimination of Lookahead Leakage in Moving Averages**:
-   - *Previous Bug*: The baseline computed `Close_ma_2 = Close.rolling(2).mean()`, averaging $Close_{t-1}$ and $Close_t$. Because the forecast for $Close_t$ directly included $Close_t$, it artificially achieved a near-zero MAPE (`0.0041`).
-   - *Corrected Formulation*: Shifted strictly prior to rolling window:
-     ```python
-     Close_ma_2 = Close.shift(1).rolling(2).mean()
-     Close_ema_5 = Close.shift(1).ewm(span=EMA_SPAN, adjust=False).mean()
-     ```
-   - *Recalculated Baseline*: The honest, un-leaked MA2 baseline exhibits a daily MAPE of **`0.0099`** and EMA5 exhibits **`0.0120`**, correctly trailing the simple Lag-1 persistence baseline (**`0.0094`**).
+How can beverage-market demand, macroeconomic indicators, and realistic pricing assumptions support commercial revenue planning for a diversified beverage company like ThaiBev?
 
-2. **Elimination of Technical Indicator Lookahead Bias**:
-   - Monthly RSI and MACD were previously calculated using the target month's close. Features are now strictly lagged (`RSI_lag_1`, `MACD_hist_lag_1`) relative to the forward prediction horizon.
+The project answers this through three linked workflows:
 
-3. **Target Reformulation (Forward Return vs. Price Level Persistence)**:
-   - Predicting raw stock prices ($P_t$) in financial time series spuriously rewards models that mimic unit-root persistence ($P_t \approx P_{t-1}$).
-   - The primary monthly target is reformulated to:
-     - **1-Month Forward Return**: $R_{t+1} = \frac{Close_{t+1}}{Close_t} - 1$ (`target_next_return`)
-     - **Forward Return Direction**: $\mathbb{I}(R_{t+1} > 0)$ (`target_next_direction`)
-     - **Excess Return over Straits Times Index**: $R_{t+1}^{ThaiBev} - R_{t+1}^{STI}$ (`target_relative_return`)
-
-4. **Modeling Official Publication Delays for Beer Sales**:
-   - Nationwide economic statistics in Thailand are compiled with a **45-to-60 day reporting lag**. An investor trading at month-end $t$ does not have access to month $t$ sales data.
-   - We evaluate realistic publication lags:
-     - `sale_lag_1`: Optimistic 1-month reporting lag.
-     - `sale_lag_2`: Realistic conservative 2-month reporting lag.
-     - `sale_yoy_growth_lag_2`: $\frac{Sale_{t-2} - Sale_{t-14}}{Sale_{t-14}}$ (deseasonalized and respecting publication delays).
-     - `sale_rolling_3m_lag_2`: 3-month smoothed domestic beer sales proxy lagged by 2 months.
-
-5. **Unified Daily Evaluation Windows**:
-   - All daily baselines and models are evaluated on the exact same holdout period (**final 280 trading days**).
-
-6. **Nested Model Ablation on Small Monthly Sample**:
-   - Avoids deep learning on $N \approx 72$ monthly observations. Evaluates incremental value across nested specifications:
-     - **Model A**: Price Momentum
-     - **Model B**: Price Momentum + Technicals
-     - **Model C**: Price Momentum + Beer Sales (2-month lag)
-     - **Model D**: Price Momentum + Beer Sales + Macro & Regime Drivers
-     - **SARIMAX**: Time series model with exogenous beer sales growth
+1. **Demand & market trend analysis** using monthly Thailand beer-sales data.
+2. **Leak-free forecasting** using stock/macro signals with publication-delay controls.
+3. **Pricing and revenue scenario analysis** using price-change and demand-elasticity assumptions.
 
 ---
 
-## Dataset Documentation: Thai Beer Sales (`beer_sales_monthly.csv`)
+## Pricing Analyst Relevance
 
-| Metadata Field | Specification |
-| :--- | :--- |
-| **Original Source** | Bank of Thailand (BOT) Economic Statistics / Ministry of Finance Excise Department / Office of Industrial Economics (OIE) |
-| **Download / Archive Date** | Captured series covering `2016-01` to `2023-03` |
-| **Geographic Scope** | Domestic Kingdom of Thailand |
-| **Measurement Nature** | Aggregate monthly retail/wholesale sales value of beer |
-| **Currency & Units** | Thai Baht (THB), nominal value (averaging 8–16 billion THB/month) |
-| **Licensing** | Thailand Open Government Data License / Public Domain |
-| **Publication Schedule** | Published monthly with a **45 to 60 day delay** (compiled 1–2 months after month-end) |
+This project maps directly to pricing and revenue analytics responsibilities:
 
-### Essential Economic Distinction: Industry Sales vs. ThaiBev Revenue
+- Demand forecasting and trend analysis
+- Revenue sensitivity modeling
+- Price-elasticity scenario planning
+- Market and macro driver evaluation
+- Forecast accuracy measurement
+- Business-facing interpretation and recommendations
+- Executive-ready charts, tables, and assumptions documentation
 
-> [!IMPORTANT]
-> **Nationwide beer sales must not be conflated with ThaiBev company revenue:**
-> 1. **Market Share**: ThaiBev (producer of Chang Beer) controls approximately 35%–40% domestic beer market share in Thailand, competing against Boon Rawd Brewery (Singha and Leo).
-> 2. **Product Diversification**: ThaiBev derives major earnings from its high-margin **domestic spirits** division (SangSom, Mekhong, Ruang Khao, holding >80% domestic share), food franchises, and non-alcoholic beverages (Oishi green tea, F&N).
-> 3. **International Footprint**: ThaiBev owns Sabeco (Bia Saigon), the largest brewer in Vietnam, as well as Scotch whisky distilleries in the UK and spirits producers in Myanmar.
-> 
-> Therefore, domestic Thai beer sales serve as an industry sentiment proxy rather than a direct top-line proxy for ThaiBev's consolidated enterprise earnings.
+**Resume-ready project title:**
+
+> ThaiBev Commercial Demand & Revenue Forecasting
+
+**Resume bullet:**
+
+> Developed a pricing analytics case study for ThaiBev using Python, demand forecasting, macroeconomic drivers, leak-free time-series validation, and price-elasticity scenarios to estimate revenue impact across base, upside, and downside commercial cases.
 
 ---
 
@@ -84,105 +44,162 @@ This repository investigates whether ThaiBev stock returns and price trajectorie
 
 | File | Description |
 | :--- | :--- |
-| `thaibev_stock_forecasting.ipynb` | Comprehensive analysis notebook with daily and monthly leak-free models. |
-| `beer_sales_monthly.csv` | Monthly Thai beer-sales data from `2016-01` to `2023-03` (87 rows). |
-| `requirements.txt` | Python dependencies including `scikit-learn` and `statsmodels`. |
-| `README.md` | Full project documentation and recalculated empirical results. |
+| `thaibev_stock_forecasting.ipynb` | Main analysis notebook with leak-free daily/monthly forecasting and commercial scenario section. |
+| `pricing_revenue_scenario.py` | Standalone pricing-sensitivity script that creates the revenue impact table and heatmap. |
+| `outputs/pricing_revenue_sensitivity.csv` | Scenario output table across price-change and elasticity assumptions. |
+| `outputs/pricing_revenue_heatmap.png` | Revenue impact heatmap for pricing analysis. |
+| `beer_sales_monthly.csv` | Monthly Thailand beer-sales data from `2016-01` to `2023-03`. |
+| `requirements.txt` | Python dependencies. |
 
 ---
 
-## Methodology & Model Specifications
+## Data Sources and Business Context
 
-### Daily Forecasting Workflow
-1. Ingest daily price history for `Y92.SI` from `2016-01-01` to `2023-04-01` (1,823 trading days).
-2. Calculate leak-free shifted moving averages (`Close_ma_2`, `Close_ema_5`) and technical indicators.
-3. Hold out the final 280 trading days (`2022-02-18` to `2023-03-31`) as a unified test set.
-4. Benchmark Lag-1, shifted MA2, shifted EMA5, linear regression, ARIMA(0,1,0), and Exponential Smoothing.
+| Data | Business Use |
+| :--- | :--- |
+| ThaiBev stock price (`Y92.SI`) | Public market proxy for investor expectations and company valuation. |
+| Thailand monthly beer sales | Industry demand proxy for domestic beverage consumption. |
+| Straits Times Index (`^STI`) | Singapore-listed equity market benchmark. |
+| iShares MSCI Thailand ETF (`THD`) | Thai domestic equity-market proxy. |
+| SGD/THB FX (`SGDTHB=X`) | Currency factor because ThaiBev trades in SGD while key demand is THB-linked. |
+| COVID regime indicator | Captures the 2020 alcohol-sales shock and demand disruption. |
 
-### Monthly Forecasting Workflow
-1. Aggregate daily stock prices and macro assets (`^STI`, `THD`, `SGDTHB=X`) to month-end observations.
-2. Formulate 1-month forward return targets ($R_{t+1}$).
-3. Engineer price momentum, lagged technical indicators, publication-lagged beer metrics, and macroeconomic returns.
-4. Reserve the final 18 months (`2021-09` to `2023-02`) as the out-of-sample test window.
-5. Execute nested model comparison using regularized regression (Ridge, ElasticNetCV) and SARIMAX.
+> Important: Thailand nationwide beer sales are **not ThaiBev revenue**. ThaiBev is a diversified beverage conglomerate with domestic spirits, non-alcoholic beverages, food franchises, Sabeco in Vietnam, and international spirits assets. Beer sales are used as a **market demand proxy**, not as a direct revenue statement.
 
 ---
 
-## Recalculated Empirical Results
+## Methodology
 
-### 1. Daily Models (Unified 280-Day Test Window: `2022-02-18` to `2023-03-31`)
+### 1. Leak-Free Forecasting Controls
 
-| Model | Specification | MAPE | Notes |
-| :--- | :--- | ---: | :--- |
-| **Lag-1 baseline** | $Close_{t-1}$ | **`0.0094`** | Random walk benchmark |
-| **Lagged-close linear regression** | OLS on $Close_{t-1}$ | `0.0098` | Simple autoregressive fit |
-| **MA2 baseline (leak-free)** | $\text{mean}(Close_{t-2}, Close_{t-1})$ | **`0.0099`** | Recalculated (was leaked `0.0041`) |
-| **EMA5 baseline (leak-free)** | Shifted 5-day EMA | **`0.0120`** | Recalculated (was leaked `0.0074`) |
-| **Exponential smoothing** | Holt-Winters damped additive | `0.0645` | Multi-step forecast degradation |
-| **ARIMA** | $(0, 1, 0) \times (1, 0, 1)_8$ | `0.0660` | Multi-step forecast degradation |
+The original moving-average baseline risked lookahead leakage by using same-period target information. This version fixes that by shifting all baseline and technical features before forecasting.
 
-*Observation*: Once lookahead leakage is resolved, MA2 error more than doubles (from `0.0041` to `0.0099`), confirming that daily market prices are best approximated by a random walk where smoothing introduces lag.
+Example correction:
+
+```python
+Close_ma_2 = Close.shift(1).rolling(2).mean()
+Close_ema_5 = Close.shift(1).ewm(span=EMA_SPAN, adjust=False).mean()
+```
+
+### 2. Publication-Delay Modeling
+
+Monthly beer-sales data is not available at the exact month-end decision date. The project models realistic reporting delays:
+
+- `sale_lag_1`: optimistic one-month lag
+- `sale_lag_2`: conservative two-month lag
+- `sale_yoy_growth_lag_2`: deseasonalized year-over-year demand growth using available data only
+- `sale_rolling_3m_lag_2`: smoothed lagged demand proxy
+
+### 3. Forecasting and Ablation
+
+The forecasting notebook compares:
+
+- Lag-1 price baseline
+- Leak-free moving average and EMA baselines
+- Linear regression
+- ARIMA / exponential smoothing
+- Ridge / ElasticNet monthly return models
+- SARIMAX with exogenous beer-sales growth
+
+### 4. Pricing and Revenue Scenario Analysis
+
+Because public data does not include transaction-level prices, margins, or SKU-level volumes, the pricing section uses **transparent scenario assumptions**:
+
+- Price-change assumptions: `-2%`, `0%`, `+1%`, `+3%`, `+5%`, `+8%`
+- Demand elasticity assumptions: `-1.5`, `-1.2`, `-1.0`, `-0.7`, `-0.3`
+- Revenue impact formula:
+
+```text
+Revenue multiplier = (1 + price_change) × (1 + elasticity × price_change)
+Revenue impact % = Revenue multiplier - 1
+```
+
+Example:
+
+```text
+If price increases by 3% and demand elasticity is -0.7,
+estimated volume change = -2.1%,
+estimated revenue impact ≈ +0.84%.
+```
 
 ---
 
-### 2. Monthly Return Models (Unified 18-Month Test Window: `2021-09` to `2023-02`)
+## Pricing Scenario Output
 
-*Target: 1-Month Forward ThaiBev Return ($R_{t+1}$)*
+Run:
 
-| Model | Feature Group | Out-of-Sample RMSE | Out-of-Sample MAE | Directional Accuracy | IC Correlation |
-| :--- | :--- | ---: | ---: | ---: | ---: |
-| **SARIMAX (AR1 + Beer Exog)** | AR(1) + `sale_yoy_growth_lag_2` | **`0.0543`** | **`0.0435`** | **`66.67%`** | **`0.4426`** |
-| **Zero-Return Baseline** | $E[R_{t+1}] = 0$ | `0.0554` | `0.0444` | `61.11%` | `0.0000` |
-| **Historical Mean Baseline** | $E[R_{t+1}] = \bar{R}_{train}$ | `0.0555` | `0.0444` | `61.11%` | `0.0000` |
-| **Model C: Price + Beer Sales** | Returns + Beer Lags | `0.0560` | `0.0446` | `55.56%` | `0.1086` |
-| **Model A: Price Momentum** | `return_1m`, `return_2m`, `return_3m` | `0.0566` | `0.0459` | `50.00%` | `0.0705` |
-| **Model D: Price + Beer + Macro** | Model C + STI, THD, FX, COVID | `0.0640` | `0.0495` | `55.56%` | `0.1125` |
-| **Model B: Price + Technicals** | Model A + RSI, MACD | `0.0920` | `0.0658` | `61.11%` | `-0.0113` |
+```bash
+python pricing_revenue_scenario.py
+```
 
----
+This produces:
 
-## Incremental Value Assessment & Honest Research Findings
+- `outputs/pricing_revenue_sensitivity.csv`
+- `outputs/pricing_revenue_heatmap.png`
 
-1. **Does Beer Sales Data Add Incremental Value?**
-   - **Contemporaneous vs. Lagged Realities**: While unlagged beer sales exhibit artificial correlation with stock returns, this signal evaporates when respecting the realistic 2-month publication schedule (`sale_lag_2` correlation = `-0.0456`).
-   - **Deseasonalized Growth Signal**: Deseasonalized annual growth (`sale_yoy_growth_lag_2`) combined with autoregressive modeling in **SARIMAX** achieved the lowest test RMSE (**`0.0543`**) and highest directional hit rate (**`66.67%`**), outperforming both the Zero-Return baseline and standalone price momentum.
-   - **Economic Explanation**: Beer sales provide a broad macroeconomic health pulse of domestic Thai consumer spending, but cannot act as a high-frequency trading trigger.
-
-2. **The Curse of Dimensionality in Small Samples**:
-   - In monthly datasets with $N \approx 72$, adding too many features (Model B technicals or Model D unregularized macro factors) inflates out-of-sample variance, causing RMSE to degrade from `0.0560` to `0.0640` and `0.0920`.
-   - **Autoregressive Mean Reversion**: Monthly returns display significant negative serial correlation ($\text{AR1} = -0.2625, p = 0.039$), rewarding parsimonious mean-reverting models over trend followers.
-
-3. **Conglomerate Diversification**:
-   - Because ThaiBev's revenue and operating profits are heavily supported by domestic spirits (Mekhong/SangSom) and international beer (Sabeco in Vietnam), fluctuations in domestic Thai beer volume only partially influence consolidated enterprise valuation.
+![Pricing Revenue Heatmap](outputs/pricing_revenue_heatmap.png)
 
 ---
 
-## Installation & Environment
+## Key Findings
 
-Create and activate a virtual environment, then install dependencies:
+1. **Leakage matters**
+   - Once target leakage is removed, simple random-walk style baselines become difficult to beat in daily price forecasting.
+
+2. **Beer sales data has modest but useful signal**
+   - Beer-sales growth is not a high-frequency trading signal, but it can support commercial context and scenario planning.
+
+3. **Publication delays change the business interpretation**
+   - A pricing or revenue analyst must use only information available at the decision date.
+
+4. **Small-sample discipline is critical**
+   - Monthly public data has limited sample size, so simple regularized models and SARIMAX are more credible than deep learning.
+
+5. **Scenario modeling is more useful for pricing roles than stock prediction alone**
+   - The elasticity heatmap translates analytics into a business decision framework: what price increase range may protect revenue under different demand responses?
+
+---
+
+## Installation
 
 ```bash
 pip install -r requirements.txt
-```
-
-Core dependencies:
-```
-numpy
-pandas
-matplotlib
-seaborn
-yfinance
-requests
-statsmodels
-scipy
-scikit-learn
 ```
 
 ---
 
 ## Usage
 
-1. Open `thaibev_stock_forecasting.ipynb`.
-2. Verify parameters in Section 2 (`TICKER`, `START_DATE`, `END_DATE`, `DAILY_TEST_DAYS`, `MONTHLY_TEST_MONTHS`).
-3. Run all cells top-to-bottom.
-4. Review the leak-free daily benchmarks and the nested monthly return forecasting tables.
+Run the pricing scenario model:
+
+```bash
+python pricing_revenue_scenario.py
+```
+
+Open the main notebook:
+
+```bash
+jupyter notebook thaibev_stock_forecasting.ipynb
+```
+
+---
+
+## Suggested Next Improvements
+
+- Add SKU/channel-level simulated data to model mix, margin, discounting, and promotion effects.
+- Build a Streamlit dashboard for pricing-scenario exploration.
+- Add tourist-arrival data, CPI, excise-tax changes, and disposable-income proxies.
+- Add walk-forward validation for monthly return and demand models.
+- Create a short business memo summarizing pricing recommendation, risks, and assumptions.
+
+---
+
+## Project Positioning
+
+This is not just a stock prediction notebook. It is a **pricing and revenue analytics case study** showing how to:
+
+- clean and document business data,
+- avoid leakage,
+- benchmark models honestly,
+- translate forecasts into commercial scenarios,
+- communicate insights for pricing and revenue decisions.
