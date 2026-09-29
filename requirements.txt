@@ -7,3 +7,5 @@ requests
 statsmodels
 scipy
 scikit-learn
+ipykernel
+notebook
